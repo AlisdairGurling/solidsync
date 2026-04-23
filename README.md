@@ -2,7 +2,7 @@
 
 > Bridge your PKM tools to your [Solid](https://solidproject.org) Pod.
 
-SolidSync is a native macOS desktop app that pulls data out of personal
+SolidSync is a cross-platform desktop app (macOS · Windows · Linux) that pulls data out of personal
 knowledge management systems — **Notion, Obsidian, Roam Research, Logseq** —
 transforms it to [RDF](https://www.w3.org/RDF/) using standard vocabularies
 (SIOC, Schema.org, Dublin Core), and syncs it into your decentralised Solid
@@ -40,8 +40,7 @@ the Solid ecosystem can use it.
 
 ### Architecture
 
-- **Desktop shell — [Tauri v2](https://v2.tauri.app/)**: native WKWebView
-  frontend, Rust backend, OS-level process isolation. ~14 MB installed.
+- **Desktop shell — [Tauri v2](https://v2.tauri.app/)**: Rust backend, OS-native WebView frontend (WKWebView on macOS, WebView2/Edge on Windows, WebKitGTK on Linux), OS-level process isolation. ~14 MB installed on macOS.
 - **Frontend — [SolidJS](https://solidjs.com) + TypeScript**: fine-grained
   reactivity, small bundle, chosen to match the Solid ecosystem's performance
   ethos.
@@ -49,16 +48,18 @@ the Solid ecosystem can use it.
   Dynamic Client Registration, PKCE (S256), DPoP-bound access tokens
   ([RFC 9449](https://datatracker.ietf.org/doc/html/rfc9449)). Tokens live in
   the Rust process, never in the WebView.
-- **Deep linking**: custom URL scheme `org.solidsync.app://auth/callback`
-  registered via the app's `Info.plist` so the browser redirect routes
-  natively back to the running app.
+- **Deep linking**: custom URL scheme `org.solidsync.app://auth/callback`,
+  registered per-platform (`Info.plist` on macOS, registry on Windows,
+  `.desktop` MIME on Linux). On Windows/Linux a `tauri-plugin-single-instance`
+  handler forwards the URL from a second-launched process to the original.
 
 ## Current capabilities
 
 - [x] **Phase 1 — Desktop foundation**
-  - Tauri v2 + Rust + SolidJS scaffolding
+  - Tauri v2 + Rust + SolidJS scaffolding (macOS · Windows · Linux)
   - Granular capability permissions (principle of least privilege)
-  - macOS custom URL scheme registered via `Info.plist`
+  - Cross-platform custom URL scheme with single-instance forwarding
+  - CI builds for all three platforms on every push (GitHub Actions)
 - [x] **Phase 2 — Solid-OIDC authentication**
   - OIDC discovery against any Solid-compliant issuer
   - Dynamic Client Registration with `dpop_bound_access_tokens: true`
@@ -71,10 +72,10 @@ the Solid ecosystem can use it.
 ## Roadmap
 
 - [ ] **Phase 3 — PKM connectors**
-  - Obsidian via the [Local REST API](https://github.com/coddingtonbear/obsidian-local-rest-api) plugin (first, smallest win)
-  - Logseq DB-version via its Local HTTP API
-  - Notion via the official REST API
-  - Roam via JSON / EDN export (one-way import; Roam has no public write API)
+  - [x] Obsidian via the [Local REST API](https://github.com/coddingtonbear/obsidian-local-rest-api) plugin — connection test, vault listing, note retrieval (Markdown + frontmatter + tags)
+  - [ ] Logseq DB-version via its Local HTTP API
+  - [ ] Notion via the official REST API
+  - [ ] Roam via JSON / EDN export (one-way import; Roam has no public write API)
 - [ ] **Phase 4 — Semantic transformation**
   - Map PKM structures to SIOC (`sioc:Post`, `sioc:Item`, `sioc:Container`…)
   - Enrich with Schema.org + Dublin Core
@@ -92,14 +93,27 @@ the Solid ecosystem can use it.
   - DPoP server-nonce retry loop
   - WebID profile document parsing (so users can enter a WebID, not only an issuer)
 
+## Platforms
+
+| OS                   | Status                          | Deep-link routing                               |
+|----------------------|---------------------------------|-------------------------------------------------|
+| macOS 13+            | Primary target, tested          | Native via `Info.plist`                         |
+| Windows 10 / 11      | Supported, requires testing     | Registry + `tauri-plugin-single-instance`       |
+| Linux (GTK)          | Supported, requires testing     | `.desktop` MIME + `tauri-plugin-single-instance`|
+
+Windows and Linux builds are produced automatically by the
+[`build`](.github/workflows/build.yml) GitHub Action — grab the artifacts
+from a recent run if you don't want to build from source.
+
 ## Getting started
 
 ### Prerequisites
 
-- macOS 13+ (Apple Silicon recommended)
 - [Rust](https://www.rust-lang.org/tools/install) stable (via `rustup`)
 - [Node.js](https://nodejs.org) 20+
-- Xcode Command Line Tools (`xcode-select --install`)
+- macOS: Xcode Command Line Tools (`xcode-select --install`)
+- Windows: [WebView2 runtime](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) (preinstalled on Windows 11; most Windows 10) and the MSVC C++ build tools
+- Linux: `libwebkit2gtk-4.1-dev`, `libgtk-3-dev`, `libappindicator3-dev`, `librsvg2-dev`, `patchelf`
 
 ### Build
 
@@ -107,12 +121,16 @@ the Solid ecosystem can use it.
 git clone https://github.com/AlisdairGurling/solidsync.git
 cd solidsync
 npm install
-npm run tauri build -- --bundles app
+npm run tauri build
 ```
 
-The `.app` bundle lands at
-`src-tauri/target/release/bundle/macos/SolidSync.app`. Double-click it, or
-drag it to `/Applications`.
+Bundles land in `src-tauri/target/release/bundle/`:
+
+- **macOS** — `macos/SolidSync.app` (and `.dmg` with `--bundles dmg`)
+- **Windows** — `nsis/SolidSync_<ver>_x64-setup.exe`, `msi/SolidSync_<ver>_x64_en-US.msi`
+- **Linux** — `deb/solidsync_<ver>_amd64.deb`, `appimage/solidsync_<ver>_amd64.AppImage`
+
+To restrict to specific formats: `npm run tauri build -- --bundles app,dmg`.
 
 ### Run in development
 
@@ -129,15 +147,21 @@ Hot-reload for the SolidJS frontend; Rust changes trigger a recompile.
    type your own issuer URL.
 3. Click **Sign in** — your default browser opens.
 4. Authenticate at the provider.
-5. The provider redirects to `org.solidsync.app://auth/callback?…` and macOS
-   hands the URL back to SolidSync, which finishes the PKCE + DPoP token
-   exchange.
-6. Your WebID appears in the app.
+5. The provider redirects to `org.solidsync.app://auth/callback?…`.
+   - **macOS** hands the URL back to the running app natively.
+   - **Windows / Linux** launch a second instance; the single-instance plugin
+     detects it, forwards the URL to the original process, and the
+     deep-link handler fires.
+6. SolidSync finishes the PKCE + DPoP token exchange and your WebID appears.
 
-If the browser says *"cannot find application"* on first redirect, quit
-SolidSync and relaunch it once from Finder — LaunchServices needs one full
-run to pick up the new URL scheme. (Moving the app to `/Applications` makes
-this persistent.)
+**macOS first-run note:** if the redirect says *"cannot find application"*,
+quit SolidSync and relaunch it once from Finder — LaunchServices needs one
+full run to register the URL scheme. Moving `SolidSync.app` to
+`/Applications` makes this persistent.
+
+**Windows SmartScreen note:** unsigned builds trigger SmartScreen on first
+launch. Click **More info → Run anyway**. We'll add code signing once the
+project gets broader distribution.
 
 ## Solid ecosystem notes
 

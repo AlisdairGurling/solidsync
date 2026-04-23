@@ -24,6 +24,7 @@ thiserror = "1"
 tokio = { version = "1", features = ["sync", "rt-multi-thread", "macros"] }
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "http2"] }
 url = "2"
+percent-encoding = "2"
 
 rand = "0.8"
 sha2 = "0.10"
@@ -33,3 +34,10 @@ p256 = { version = "0.13", features = ["ecdsa"] }
 
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Windows/Linux: detect a second app instance (e.g. triggered by a deep-link
+# URL) and forward its argv to the running instance, where the deep-link
+# handler takes over. On macOS the OS routes URLs natively — we don't need
+# (and can't use) the single-instance plugin.
+[target.'cfg(any(target_os = "windows", target_os = "linux"))'.dependencies]
+tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }

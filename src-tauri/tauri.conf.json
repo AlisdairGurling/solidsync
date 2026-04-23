@@ -1,0 +1,47 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "SolidSync",
+  "version": "0.1.0",
+  "identifier": "org.solidsync.app",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "SolidSync",
+        "width": 960,
+        "height": 680,
+        "minWidth": 720,
+        "minHeight": 520
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "category": "Productivity",
+    "shortDescription": "Bridge PKM tools to your Solid Pod",
+    "longDescription": "SolidSync extracts data from Notion, Obsidian, Roam, and Logseq, transforms it to RDF, and syncs it to your Solid Pod.",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  },
+  "plugins": {
+    "deep-link": {
+      "desktop": {
+        "schemes": ["org.solidsync.app"]
+      }
+    }
+  }
+}

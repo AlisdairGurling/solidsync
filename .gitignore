@@ -1,0 +1,44 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Vite build
+dist/
+dist-ssr/
+.vite/
+
+# Rust / Tauri
+src-tauri/target/
+src-tauri/gen/schemas/
+*.rs.bk
+
+# Environments and secrets — never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE / editors
+.idea/
+*.swp
+*.swo
+*~
+
+# Claude Code local session state
+.claude/
+
+# Logs
+*.log
+
+# OS artifacts
+Thumbs.db

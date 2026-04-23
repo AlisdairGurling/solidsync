@@ -16,9 +16,9 @@ authentication) are working. PKM connectors and RDF transformation are next.
 
 ## Why
 
-PKM tools each lock your data into a proprietary silo: Notion in their cloud
+PKM tools each lock your data into a silo: Notion in their cloud
 database, Roam in their Clojure graph, Obsidian in local Markdown with custom
-syntax, Logseq in its own SQLite schema. Moving knowledge between them — or
+syntax (or at the very least isn't soild compatable), Logseq in its own SQLite schema. Moving knowledge between them — or
 querying it with your own tools — is painful and lossy.
 
 Solid flips the model: your data lives in a **Pod** you control, described as

@@ -1,14 +1,23 @@
 mod auth;
 mod commands;
+mod connectors;
 mod error;
 
 use std::sync::Arc;
 
 use tokio::sync::RwLock;
 
+use connectors::obsidian::{ObsidianClient, ObsidianConfig};
+
 pub struct AppState {
     pub http: reqwest::Client,
     pub auth: auth::state::SharedAuthState,
+    pub obsidian: Arc<RwLock<Option<ObsidianClientState>>>,
+}
+
+pub struct ObsidianClientState {
+    pub config: ObsidianConfig,
+    pub client: ObsidianClient,
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -29,6 +38,7 @@ pub fn run() {
     let app_state = AppState {
         http,
         auth: Arc::new(RwLock::new(auth::state::AuthState::default())),
+        obsidian: Arc::new(RwLock::new(None)),
     };
 
     tauri::Builder::default()
@@ -40,13 +50,16 @@ pub fn run() {
             commands::handle_callback,
             commands::current_session,
             commands::logout,
+            commands::obsidian_configure,
+            commands::obsidian_status,
+            commands::obsidian_list_root,
+            commands::obsidian_get_note,
+            commands::obsidian_disconnect,
         ])
         .setup(|app| {
             #[cfg(desktop)]
             {
                 use tauri_plugin_deep_link::DeepLinkExt;
-                // Ensure the solidsync:// scheme is registered even in dev builds
-                // where the Info.plist registration isn't applied.
                 if let Err(e) = app.deep_link().register_all() {
                     tracing::warn!(error = %e, "deep-link register_all failed");
                 }

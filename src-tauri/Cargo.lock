@@ -3922,6 +3922,7 @@ version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
  "p256",
+ "percent-encoding",
  "rand 0.8.6",
  "reqwest 0.12.28",
  "serde",

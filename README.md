@@ -71,10 +71,10 @@ the Solid ecosystem can use it.
 ## Roadmap
 
 - [ ] **Phase 3 — PKM connectors**
-  - Obsidian via the [Local REST API](https://github.com/coddingtonbear/obsidian-local-rest-api) plugin (first, smallest win)
-  - Logseq DB-version via its Local HTTP API
-  - Notion via the official REST API
-  - Roam via JSON / EDN export (one-way import; Roam has no public write API)
+  - [x] Obsidian via the [Local REST API](https://github.com/coddingtonbear/obsidian-local-rest-api) plugin — connection test, vault listing, note retrieval (Markdown + frontmatter + tags)
+  - [ ] Logseq DB-version via its Local HTTP API
+  - [ ] Notion via the official REST API
+  - [ ] Roam via JSON / EDN export (one-way import; Roam has no public write API)
 - [ ] **Phase 4 — Semantic transformation**
   - Map PKM structures to SIOC (`sioc:Post`, `sioc:Item`, `sioc:Container`…)
   - Enrich with Schema.org + Dublin Core

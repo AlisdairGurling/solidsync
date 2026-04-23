@@ -189,6 +189,127 @@ code.small {
   font-size: 0.75rem;
 }
 
+label.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 400;
+  color: #3a3a3c;
+  font-size: 0.875rem;
+}
+
+label.checkbox input[type="checkbox"] {
+  margin: 0;
+  width: 16px;
+  height: 16px;
+}
+
+a {
+  color: #2f5d90;
+  text-decoration: underline;
+}
+
+a:hover {
+  color: #264a73;
+}
+
+.vault-browser {
+  display: grid;
+  grid-template-columns: minmax(160px, 40%) 1fr;
+  gap: 16px;
+  margin-top: 16px;
+  border: 1px solid #e5e5ea;
+  border-radius: 10px;
+  overflow: hidden;
+  min-height: 240px;
+}
+
+.vault-list {
+  border-right: 1px solid #e5e5ea;
+  display: flex;
+  flex-direction: column;
+  max-height: 340px;
+}
+
+.vault-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-bottom: 1px solid #e5e5ea;
+  background: #fafafa;
+  font-size: 0.875rem;
+}
+
+ul.files {
+  list-style: none;
+  padding: 4px 0;
+  margin: 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+ul.files li {
+  padding: 6px 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  border-radius: 4px;
+  margin: 0 4px;
+}
+
+ul.files li:hover {
+  background: #f0f4fb;
+}
+
+ul.files li.active {
+  background: #2f5d90;
+  color: #fff;
+}
+
+.vault-preview {
+  padding: 10px 14px;
+  overflow: auto;
+  max-height: 340px;
+}
+
+.vault-preview h3 {
+  margin: 0 0 6px;
+  font-size: 0.9375rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: #3a3a3c;
+  word-break: break-all;
+}
+
+.vault-preview .tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 10px;
+}
+
+.vault-preview .tag {
+  background: #f0f4fb;
+  color: #2f5d90;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+pre.markdown {
+  margin: 0;
+  padding: 10px 12px;
+  background: #f8f8f8;
+  border-radius: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.8125rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 260px;
+  overflow: auto;
+}
+
 footer {
   color: #8e8e93;
   font-size: 0.8125rem;
@@ -254,5 +375,50 @@ footer p {
 
   footer {
     color: #6e6e73;
+  }
+
+  label.checkbox {
+    color: #d1d1d6;
+  }
+
+  a {
+    color: #8ab4f8;
+  }
+
+  a:hover {
+    color: #b4ceff;
+  }
+
+  .vault-browser,
+  .vault-list {
+    border-color: #3a3a3c;
+  }
+
+  .vault-toolbar {
+    background: #1c1c1e;
+    border-color: #3a3a3c;
+  }
+
+  ul.files li:hover {
+    background: #2c2c2e;
+  }
+
+  ul.files li.active {
+    background: #8ab4f8;
+    color: #1c1c1e;
+  }
+
+  .vault-preview h3 {
+    color: #d1d1d6;
+  }
+
+  .vault-preview .tag {
+    background: #2c2c2e;
+    color: #8ab4f8;
+  }
+
+  pre.markdown {
+    background: #1c1c1e;
+    color: #e0e0e5;
   }
 }

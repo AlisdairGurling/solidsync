@@ -8,6 +8,7 @@ import {
   logout,
   type SessionSummary,
 } from "./lib/auth";
+import { ObsidianPanel } from "./components/ObsidianPanel";
 import "./App.css";
 
 const KNOWN_PROVIDERS: { label: string; issuer: string }[] = [
@@ -180,6 +181,10 @@ function App() {
             </Show>
           </section>
         )}
+      </Show>
+
+      <Show when={session()}>
+        <ObsidianPanel />
       </Show>
 
       <footer>

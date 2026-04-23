@@ -8,8 +8,11 @@ use crate::auth::dpop::DpopKey;
 use crate::auth::pkce::PkcePair;
 use crate::auth::session::TokenSet;
 use crate::auth::state::{ActiveSession, PendingFlow};
+use crate::connectors::obsidian::{
+    NoteDetail, ObsidianClient, ObsidianConfig, ObsidianStatus,
+};
 use crate::error::{Result, SolidSyncError};
-use crate::AppState;
+use crate::{AppState, ObsidianClientState};
 
 pub const REDIRECT_URI: &str = "org.solidsync.app://auth/callback";
 pub const SCOPES: &str = "openid profile offline_access webid";
@@ -226,6 +229,88 @@ pub async fn logout(state: State<'_, AppState>) -> Result<()> {
     auth.pending.clear();
     Ok(())
 }
+
+// ----- Obsidian connector -------------------------------------------------
+
+#[derive(Debug, Serialize)]
+pub struct ObsidianConnectionSummary {
+    pub base_url: String,
+    pub authenticated: bool,
+    pub service: String,
+    pub versions: serde_json::Value,
+}
+
+/// Configure (or reconfigure) the Obsidian connection, then immediately verify
+/// it by calling the plugin's status endpoint.
+#[tauri::command]
+pub async fn obsidian_configure(
+    config: ObsidianConfig,
+    state: State<'_, AppState>,
+) -> Result<ObsidianConnectionSummary> {
+    tracing::info!(base = %config.base_url, "obsidian_configure");
+    let client = ObsidianClient::new(config.clone())?;
+    let status: ObsidianStatus = client.status().await?;
+
+    if !status.authenticated {
+        return Err(SolidSyncError::Other(
+            "Obsidian plugin reached but API key is not accepted (authenticated=false)".into(),
+        ));
+    }
+
+    let summary = ObsidianConnectionSummary {
+        base_url: config.base_url.clone(),
+        authenticated: status.authenticated,
+        service: status.service.clone(),
+        versions: status.versions.clone(),
+    };
+
+    *state.obsidian.write().await = Some(ObsidianClientState { config, client });
+    Ok(summary)
+}
+
+#[tauri::command]
+pub async fn obsidian_status(
+    state: State<'_, AppState>,
+) -> Result<Option<ObsidianConnectionSummary>> {
+    let guard = state.obsidian.read().await;
+    let Some(ref oc) = *guard else { return Ok(None); };
+    let status = oc.client.status().await?;
+    Ok(Some(ObsidianConnectionSummary {
+        base_url: oc.config.base_url.clone(),
+        authenticated: status.authenticated,
+        service: status.service,
+        versions: status.versions,
+    }))
+}
+
+#[tauri::command]
+pub async fn obsidian_list_root(state: State<'_, AppState>) -> Result<Vec<String>> {
+    let guard = state.obsidian.read().await;
+    let oc = guard.as_ref().ok_or_else(|| {
+        SolidSyncError::Other("Obsidian is not configured".into())
+    })?;
+    oc.client.list_root().await
+}
+
+#[tauri::command]
+pub async fn obsidian_get_note(
+    path: String,
+    state: State<'_, AppState>,
+) -> Result<NoteDetail> {
+    let guard = state.obsidian.read().await;
+    let oc = guard.as_ref().ok_or_else(|| {
+        SolidSyncError::Other("Obsidian is not configured".into())
+    })?;
+    oc.client.get_note(&path).await
+}
+
+#[tauri::command]
+pub async fn obsidian_disconnect(state: State<'_, AppState>) -> Result<()> {
+    *state.obsidian.write().await = None;
+    Ok(())
+}
+
+// ----- helpers ------------------------------------------------------------
 
 fn normalize_issuer(raw: &str) -> Result<String> {
     let trimmed = raw.trim();

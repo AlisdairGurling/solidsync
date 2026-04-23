@@ -41,7 +41,28 @@ pub fn run() {
         obsidian: Arc::new(RwLock::new(None)),
     };
 
-    tauri::Builder::default()
+    #[allow(unused_mut)]
+    let mut builder = tauri::Builder::default();
+
+    // Windows + Linux: when the OS launches a second instance to deliver a
+    // deep-link URL, detect it, focus the original window, and let the
+    // single-instance plugin's `deep-link` integration forward the URL to
+    // the already-running deep-link listener.
+    #[cfg(any(target_os = "windows", target_os = "linux"))]
+    {
+        use tauri::Manager;
+        builder = builder.plugin(tauri_plugin_single_instance::init(
+            |app, _argv, _cwd| {
+                if let Some(w) = app.get_webview_window("main") {
+                    let _ = w.show();
+                    let _ = w.unminimize();
+                    let _ = w.set_focus();
+                }
+            },
+        ));
+    }
+
+    builder
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_deep_link::init())
         .manage(app_state)
@@ -60,8 +81,12 @@ pub fn run() {
             #[cfg(desktop)]
             {
                 use tauri_plugin_deep_link::DeepLinkExt;
+                // On Windows and Linux, register the URL scheme with the OS
+                // at runtime. On macOS this is unsupported at runtime — the
+                // Info.plist handles registration at install time — so the
+                // warning log is expected there.
                 if let Err(e) = app.deep_link().register_all() {
-                    tracing::warn!(error = %e, "deep-link register_all failed");
+                    tracing::debug!(error = %e, "deep-link register_all (expected on macOS)");
                 }
             }
             Ok(())
